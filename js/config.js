@@ -16,8 +16,8 @@ window.EVENT = {
   whatsappMessage:
     "Olá! Quero informações sobre o Capoeira na Conectividade dos Tambores 2026 (12/09 no FITO, Osasco).",
   organizers:
-    "Associação de Capoeira Cordão de Ouro e Movimento Orgânico Cultural — coordenação Mestre Patado",
-  coordinator: "Mestre Patado",
+    "Associação de Capoeira Cordão de Ouro e Movimento Orgânico Cultural — coordenação Mestre Kuata",
+  coordinator: "Mestre Kuata",
 
   /** Investimento único (material oficial) */
   investment: {
