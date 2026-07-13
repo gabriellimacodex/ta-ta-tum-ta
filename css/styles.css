@@ -955,7 +955,7 @@ code {
   text-align: left;
 }
 
-.field input,
+.field input:not([type="radio"]):not([type="checkbox"]),
 .field select,
 .field textarea {
   font: inherit;
@@ -968,7 +968,7 @@ code {
   width: 100%;
 }
 
-.field input:focus,
+.field input:not([type="radio"]):not([type="checkbox"]):focus,
 .field select:focus,
 .field textarea:focus {
   outline: 2px solid var(--gold);
@@ -1005,11 +1005,21 @@ code {
 .radio {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: flex-start;
+  gap: 0.55rem;
   font-weight: 500;
   color: var(--ink);
-  margin: 0.35rem 0;
+  margin: 0.4rem 0;
   cursor: pointer;
+  width: 100%;
+}
+
+.radio input[type="radio"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--gold);
 }
 
 .check-agree {
