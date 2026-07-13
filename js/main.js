@@ -4,16 +4,67 @@
   const nav = document.getElementById("menu-principal");
   const event = window.EVENT || {};
 
-  /* ----- WhatsApp links ----- */
-  function buildWhatsAppUrl() {
+  function waUrl(message) {
     const phone = (event.whatsapp || "").replace(/\D/g, "");
-    const text = encodeURIComponent(event.whatsappMessage || "");
     if (!phone) return null;
+    const text = encodeURIComponent(message || event.whatsappMessage || "");
     return `https://wa.me/${phone}?text=${text}`;
   }
 
+  /* ----- Portas: pagamento + WhatsApp ----- */
+  function wirePaths() {
+    const paths = event.paths || {};
+
+    Object.keys(paths).forEach((key) => {
+      const path = paths[key];
+      if (!path) return;
+
+      const cta = document.querySelector(`.path-cta[data-path="${key}"]`);
+      const wa = document.querySelector(`.path-wa[data-path-wa="${key}"]`);
+      const priceEl = document.querySelector(`[data-path-price="${key}"]`);
+
+      if (priceEl && path.priceLabel) {
+        priceEl.textContent = path.priceLabel;
+      }
+
+      const msg = path.whatsappMessage || event.whatsappMessage;
+      const payment = (path.paymentUrl || "").trim();
+      const chat = waUrl(msg);
+
+      if (cta) {
+        if (payment) {
+          cta.href = payment;
+          cta.target = "_blank";
+          cta.rel = "noopener noreferrer";
+          if (path.ctaLabel) cta.textContent = path.ctaLabel;
+        } else if (chat) {
+          // Sem checkout ainda: CTA principal vai pro WhatsApp
+          cta.href = chat;
+          cta.target = "_blank";
+          cta.rel = "noopener noreferrer";
+          if (path.ctaLabel) cta.textContent = path.ctaLabel;
+        } else {
+          cta.href = "#participar";
+          cta.removeAttribute("target");
+        }
+      }
+
+      if (wa) {
+        if (chat) {
+          wa.href = chat;
+          wa.target = "_blank";
+          wa.rel = "noopener noreferrer";
+        } else {
+          wa.href = "#participar";
+          wa.removeAttribute("target");
+        }
+      }
+    });
+  }
+
+  /* ----- WhatsApp genérico (rodapé da seção + FAB) ----- */
   function wireWhatsApp() {
-    const url = buildWhatsAppUrl();
+    const url = waUrl(event.whatsappMessage);
     const links = [
       document.getElementById("btn-whatsapp"),
       document.getElementById("fab-whatsapp"),
@@ -22,17 +73,9 @@
     links.forEach((el) => {
       if (url) {
         el.href = url;
-        el.removeAttribute("aria-disabled");
-        el.classList.remove("is-disabled");
       } else {
-        el.href = "#inscricao";
+        el.href = "#participar";
         el.removeAttribute("target");
-        el.addEventListener("click", (e) => {
-          e.preventDefault();
-          alert(
-            "Configure o número do WhatsApp em js/config.js (campo whatsapp) para ativar a confirmação."
-          );
-        });
       }
     });
   }
@@ -70,7 +113,7 @@
   }
 
   /* ----- Active section highlight ----- */
-  const sectionIds = ["sobre", "programacao", "inscricao", "local", "faq"];
+  const sectionIds = ["sobre", "programacao", "participar", "local", "faq"];
   const navLinks = nav
     ? Array.from(nav.querySelectorAll('a[href^="#"]')).filter((a) =>
         sectionIds.includes(a.getAttribute("href").slice(1))
@@ -109,11 +152,16 @@
   }
 
   /* ----- Init ----- */
+  wirePaths();
   wireWhatsApp();
   onScroll();
   updateActiveNav();
-  window.addEventListener("scroll", () => {
-    onScroll();
-    updateActiveNav();
-  }, { passive: true });
+  window.addEventListener(
+    "scroll",
+    () => {
+      onScroll();
+      updateActiveNav();
+    },
+    { passive: true }
+  );
 })();
