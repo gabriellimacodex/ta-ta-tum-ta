@@ -393,17 +393,19 @@
                     <input type="tel" name="telefone" required autocomplete="tel" />
                   </label>
                 </div>
-                <fieldset class="field fieldset">
-                  <legend>Forma de pagamento</legend>
-                  <label class="radio">
-                    <input type="radio" name="pagamento" value="Link de pagamento" checked />
-                    Link de pagamento
-                  </label>
-                  <label class="radio">
-                    <input type="radio" name="pagamento" value="Pix" />
-                    Pix
-                  </label>
-                </fieldset>
+                <div class="pay-method">
+                  <p class="pay-method-label">Forma de pagamento</p>
+                  <div class="pay-method-options" role="radiogroup" aria-label="Forma de pagamento">
+                    <label class="pay-option">
+                      <input type="radio" name="pagamento" value="Link de pagamento" checked />
+                      <span>Link de pagamento</span>
+                    </label>
+                    <label class="pay-option">
+                      <input type="radio" name="pagamento" value="Pix" />
+                      <span>Pix</span>
+                    </label>
+                  </div>
+                </div>
                 <label class="field">
                   <span>Tamanho da camiseta</span>
                   <select name="camiseta" required>
