@@ -3,6 +3,7 @@
   const toggle = document.querySelector(".nav-toggle");
   const nav = document.getElementById("menu-principal");
   const event = window.EVENT || {};
+  const invest = event.investment || {};
 
   function waUrl(message) {
     const phone = (event.whatsapp || "").replace(/\D/g, "");
@@ -11,73 +12,109 @@
     return `https://wa.me/${phone}?text=${text}`;
   }
 
-  /* ----- Portas: pagamento + WhatsApp ----- */
-  function wirePaths() {
-    const paths = event.paths || {};
+  /* ----- Investimento: preço, includes, payment, Pix ----- */
+  function wireInvestment() {
+    const priceEl = document.getElementById("invest-price");
+    if (priceEl && invest.priceLabel) {
+      priceEl.textContent = invest.priceLabel;
+    }
 
-    Object.keys(paths).forEach((key) => {
-      const path = paths[key];
-      if (!path) return;
+    const list = document.getElementById("invest-includes");
+    if (list && Array.isArray(invest.includes) && invest.includes.length) {
+      list.innerHTML = invest.includes.map((item) => `<li>${item}</li>`).join("");
+    }
 
-      const cta = document.querySelector(`.path-cta[data-path="${key}"]`);
-      const wa = document.querySelector(`.path-wa[data-path-wa="${key}"]`);
-      const priceEl = document.querySelector(`[data-path-price="${key}"]`);
+    const payBtn = document.getElementById("btn-payment");
+    if (payBtn && invest.paymentUrl) {
+      payBtn.href = invest.paymentUrl;
+    }
 
-      if (priceEl && path.priceLabel) {
-        priceEl.textContent = path.priceLabel;
-      }
+    const pixKey = invest.pixKey || invest.pixLabel || "";
+    const pixEl = document.getElementById("pix-key");
+    if (pixEl && pixKey) {
+      pixEl.textContent = pixKey;
+    }
 
-      const msg = path.whatsappMessage || event.whatsappMessage;
-      const payment = (path.paymentUrl || "").trim();
-      const chat = waUrl(msg);
-
-      if (cta) {
-        if (payment) {
-          cta.href = payment;
-          cta.target = "_blank";
-          cta.rel = "noopener noreferrer";
-          if (path.ctaLabel) cta.textContent = path.ctaLabel;
-        } else if (chat) {
-          // Sem checkout ainda: CTA principal vai pro WhatsApp
-          cta.href = chat;
-          cta.target = "_blank";
-          cta.rel = "noopener noreferrer";
-          if (path.ctaLabel) cta.textContent = path.ctaLabel;
-        } else {
-          cta.href = "#participar";
-          cta.removeAttribute("target");
+    const copyBtn = document.getElementById("btn-copy-pix");
+    const feedback = document.getElementById("pix-feedback");
+    if (copyBtn && pixKey) {
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(pixKey);
+          if (feedback) {
+            feedback.hidden = false;
+            feedback.textContent = "Pix copiado!";
+            setTimeout(() => {
+              feedback.hidden = true;
+            }, 2500);
+          }
+        } catch {
+          // fallback
+          const range = document.createRange();
+          range.selectNodeContents(pixEl);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          if (feedback) {
+            feedback.hidden = false;
+            feedback.textContent = "Selecione e copie o e-mail Pix.";
+          }
         }
-      }
+      });
+    }
+  }
 
-      if (wa) {
-        if (chat) {
-          wa.href = chat;
-          wa.target = "_blank";
-          wa.rel = "noopener noreferrer";
-        } else {
-          wa.href = "#participar";
-          wa.removeAttribute("target");
-        }
+  /* ----- Formulário → WhatsApp ----- */
+  function wireForm() {
+    const form = document.getElementById("insc-form");
+    if (!form) return;
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const data = new FormData(form);
+      const lines = [
+        "📋 *Inscrição — Capoeira na Conectividade dos Tambores 2026*",
+        "",
+        `*Responsável:* ${data.get("responsavel") || "-"}`,
+        `*Praticante:* ${data.get("praticante") || "-"}`,
+        `*Graduação atual:* ${data.get("graduacao") || "-"}`,
+        `*Idade:* ${data.get("idade") || "-"}`,
+        `*Telefone:* ${data.get("telefone") || "-"}`,
+        `*Pagamento:* ${data.get("pagamento") || "-"}`,
+        `*Camiseta:* ${data.get("camiseta") || "-"}`,
+        `*Observações:* ${data.get("obs") || "-"}`,
+        "",
+        "Declaro estar ciente das informações do evento.",
+        "",
+        invest.paymentUrl
+          ? `Link de pagamento: ${invest.paymentUrl}`
+          : "",
+        invest.pixKey ? `Pix: ${invest.pixKey}` : "",
+      ].filter(Boolean);
+
+      const url = waUrl(lines.join("\n"));
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        alert("WhatsApp não configurado. Contate a organização.");
       }
     });
   }
 
-  /* ----- WhatsApp genérico (rodapé da seção + FAB) ----- */
+  /* ----- WhatsApp genérico (rodapé + FAB) ----- */
   function wireWhatsApp() {
     const url = waUrl(event.whatsappMessage);
-    const links = [
+    [
       document.getElementById("btn-whatsapp"),
       document.getElementById("fab-whatsapp"),
-    ].filter(Boolean);
-
-    links.forEach((el) => {
-      if (url) {
-        el.href = url;
-      } else {
-        el.href = "#participar";
-        el.removeAttribute("target");
-      }
-    });
+    ]
+      .filter(Boolean)
+      .forEach((el) => {
+        el.href = url || "#participar";
+        if (!url) el.removeAttribute("target");
+      });
   }
 
   /* ----- Maps ----- */
@@ -106,13 +143,10 @@
       toggle.setAttribute("aria-expanded", String(open));
       toggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
     });
-
-    nav.querySelectorAll("a").forEach((a) => {
-      a.addEventListener("click", closeNav);
-    });
+    nav.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeNav));
   }
 
-  /* ----- Active section highlight ----- */
+  /* ----- Active section ----- */
   const sectionIds = ["sobre", "programacao", "participar", "local", "faq"];
   const navLinks = nav
     ? Array.from(nav.querySelectorAll('a[href^="#"]')).filter((a) =>
@@ -132,7 +166,7 @@
     });
   }
 
-  /* ----- Reveal on scroll ----- */
+  /* ----- Reveal ----- */
   const reveals = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver(
@@ -151,8 +185,8 @@
     reveals.forEach((el) => el.classList.add("is-visible"));
   }
 
-  /* ----- Init ----- */
-  wirePaths();
+  wireInvestment();
+  wireForm();
   wireWhatsApp();
   onScroll();
   updateActiveNav();
